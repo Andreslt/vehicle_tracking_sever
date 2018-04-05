@@ -22,7 +22,7 @@ router.post('/savetrail', (req, res) => {
   exports.getZoneOfVehicle(req.body.vehicle_id, cb => {
     if(!cb) return res.status(404).send('Vehicle not found.')
     const data = req.body;
-    data.zone_id = cb.zone_id;
+    data.zone_vehicle = `${cb.zone_id}_${cb.vehicle_id}`;
     fB.child('trails').push().set(data).then(function (result) {
       return res.json({ message: 'Data submitted succesfully' })
     })
