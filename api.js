@@ -10,12 +10,26 @@ firebase.initializeApp({
   databaseURL: dbURL
 });
 
+const fB = firebase.database().refFromURL(dbURL);
+
+exports.getZoneOfVehicle = (vehicle_id, done) => {
+  fB.child('vehicles').on('value', snap => {
+    done(snap.val()[vehicle_id])
+  })
+}
+
 router.post('/savetrail', (req, res) => {
-    const dbRef = firebase.database().refFromURL(dbURL);
-    const colRef = dbRef.child('trails');
-    colRef.push().set(req.body.data).then(function (result) {
+  exports.getZoneOfVehicle(req.body.vehicle_id, cb => {
+    if(!cb) return res.status(404).send('Vehicle not found.')
+    const data = req.body;
+    data.zone_id = cb.zone_id;
+    fB.child('trails').push().set(data).then(function (result) {
       return res.json({ message: 'Data submitted succesfully' })
     })
+    .catch(function(e){
+      return res.status(500).send(e.message);
+    })
   })
+})
 
 module.exports = router;
