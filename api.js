@@ -14,13 +14,19 @@ const fB = firebase.database().refFromURL(dbURL);
 
 exports.getZoneOfVehicle = (vehicle_id, done) => {
   fB.child('vehicles').on('value', snap => {
-    done(snap.val()[vehicle_id])
+    const vehicles = snap.val();
+    let vehArray = [], vehiclePicked;
+    Object.keys(vehicles).map(key => {
+      vehArray.push(vehicles[key]);      
+    })
+    vehiclePicked = vehArray.filter(key => { return key.id === vehicle_id });
+    if(!!vehiclePicked) done(vehiclePicked[0])
   })
 }
 
 router.post('/savetrail', (req, res) => {
   exports.getZoneOfVehicle(req.body.vehicle_id, cb => {
-    if(!cb) return res.status(404).send('Vehicle not found.')
+    if (!cb) return res.status(404).send('Vehicle not found.')
     const data = req.body;
     data.zone_vehicle = `${cb.zone_id}_${req.body.vehicle_id}`;
     fB.child('trails').push().set(data).then(function (result) {
