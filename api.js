@@ -1,8 +1,10 @@
 const express = require('express');
 const router = express.Router();
 
+const json2csv = require('json2csv').parse;
 const firebase = require("firebase-admin");
 const serviceAccount = require('./firebase.json');
+const fs = require('fs');
 
 const dbURL = "https://ss-smtracking.firebaseio.com"
 firebase.initializeApp({
@@ -17,10 +19,10 @@ exports.getZoneOfVehicle = (vehicle_id, done) => {
     const vehicles = snap.val();
     let vehArray = [], vehiclePicked;
     Object.keys(vehicles).map(key => {
-      vehArray.push(vehicles[key]);      
+      vehArray.push(vehicles[key]);
     })
     vehiclePicked = vehArray.filter(key => { return key.id === vehicle_id });
-    if(!!vehiclePicked) done(vehiclePicked[0])
+    if (!!vehiclePicked) done(vehiclePicked[0])
   })
 }
 
@@ -32,10 +34,22 @@ router.post('/savetrail', (req, res) => {
     fB.child('trails').push().set(data).then(function (result) {
       return res.json({ message: 'Data submitted succesfully' })
     })
-    .catch(function(e){
-      return res.status(500).send(e.message);
-    })
+      .catch(function (e) {
+        return res.status(500).send(e.message);
+      })
   })
+})
+
+router.post('/downloadcsv', async (req, res) => {
+  const data = []; // data.push(snap.val()[key] )
+  fB.child('trails').orderByChild('sent_tsmp').startAt(req.body.startingDate).endAt(req.body.endingDate)
+    .on('value', snap => {
+      Object.keys(snap.val()).map(key => data.push(snap.val()[key]));
+      const fields = ['id', 'altitude', 'latitude', 'longitude', 'sent_tsmp', 'speed', 'track', 'vehicle_id', 'zone_vehicle'];
+      const opts = { fields };      
+      const csv = json2csv(data, opts);
+      return res.status(200).send(csv);
+    })
 })
 
 module.exports = router;
