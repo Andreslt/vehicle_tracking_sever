@@ -4,6 +4,7 @@ const bodyParser = require('body-parser')
 
 app.use(require('cors')());
 app.use(bodyParser.json());
+
 app.use('/api', api);
 app.get('/', (req, res) => {
   res.send('Welcome to the Smart-Tracking System API!')

@@ -40,7 +40,7 @@ router.post('/savetrail', (req, res) => {
   })
 })
 
-router.post('/downloadcsv', async (req, res) => {
+router.post('/downloadcsv', (req, res) => {
   const data = []; // data.push(snap.val()[key] )
   fB.child('trails').orderByChild('sent_tsmp').startAt(req.body.startingDate).endAt(req.body.endingDate)
     .on('value', snap => {
