@@ -44,9 +44,11 @@ router.post('/downloadcsv', (req, res) => {
   const data = []; // data.push(snap.val()[key] )
   fB.child('trails').orderByChild('sent_tsmp').startAt(req.body.startingDate).endAt(req.body.endingDate)
     .on('value', snap => {
-      Object.keys(snap.val()).map(key => data.push(snap.val()[key]));
+      const snapVal = snap.val();
+      if (!snapVal) return res.status(400).send({ message: 'Los resultados no contienen registros. Modifique los parámetros de búsqueda.' });
+      Object.keys(snapVal).map(key => data.push(snap.val()[key]));
       const fields = ['id', 'altitude', 'latitude', 'longitude', 'sent_tsmp', 'speed', 'track', 'vehicle_id', 'zone_vehicle'];
-      const opts = { fields };      
+      const opts = { fields };
       const csv = json2csv(data, opts);
       return res.status(200).send(csv);
     })
