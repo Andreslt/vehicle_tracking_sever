@@ -30,7 +30,7 @@ router.post('/savetrail', (req, res) => {
     const path = `DATA/ENTITIES/${company}/ZONES/${vh.zone}/VEHICLES/${vh.id}/TRAILS`;
     data = {
       ...data,
-      sent_tsmp: moment(data.sent_tsmp).format()
+      sent_tsmp: moment(data.sent_tsmp).utcOffset("-05:00").format()
     }
     fB.child(path).push().set(data).then(function (result) {
       return res.json({ message: 'Data submitted succesfully' })
