@@ -7,6 +7,9 @@ const serviceAccount = require('./firebase.json');
 // const fs = require('fs');
 const moment = require('moment');
 const geodistance = require('./geodistance');
+const nodemailer = require('nodemailer');
+const nmmgt = require('nodemailer-mailgun-transport');
+const mailgun = require('./mailgun.json');
 
 const dbURL = "https://ss-smtracking.firebaseio.com";
 firebase.initializeApp({
@@ -48,6 +51,20 @@ router.post('/savetrail', (req, res) => {
           const usersSnap = await fB.child('USERS').orderByChild('company').equalTo(company).once('value');
           const users = Object.values(usersSnap.val()); // { company, email, name, role }
           // TODO send emails
+          const to = users.map(user => user.email);
+          const transport = nodemailer.createTransport(nmmgt({
+            auth: {
+              api_key: mailgun.apiKey,
+              domain: mailgun.domain,
+            },
+          }));
+          transport.sendMail({
+            from: "Smart Tracking Team <no-reply@smart.tracking.com>",
+            to,
+            subject: `Vehicle ${vh.id} just entered the geoFence ${geoFence.name}`,
+            html: `<div>Vehicle with ID ${vh.id} just entered the geoFence ${geoFence.name} at ${data.sent_tsmp}</div>
+              <div>LatLng: ${data.lat}, ${data.lng}</div>`
+          })
         }
         // if (lastDistance < geoFence.radius && recentDistance > geoFence.radius) // vehicle leaves geo-fence
       });
