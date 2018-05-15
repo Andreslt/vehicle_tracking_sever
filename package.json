@@ -8,5 +8,8 @@
     "moment": "^2.22.1",
     "nodemailer": "^4.6.4",
     "nodemailer-mailgun-transport": "^1.4.0"
+  },
+  "scripts": {
+    "start": "node index.js"
   }
 }

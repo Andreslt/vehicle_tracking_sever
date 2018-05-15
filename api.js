@@ -39,35 +39,38 @@ router.post('/savetrail', (req, res) => {
 
     try {
       const lastSnap = await fB.child(path).limitToLast(1).once('value');
-      const last = Object.values(lastSnap.val())[0];
+      let last = Object.values(lastSnap.val());
       await fB.child(path).push().set(data);
-      const geoFencesSnap = fB.child(`CONTROL/GEO_FENCES/${company}`).once('value');
-      const geoFences = geoFencesSnap.val();
-      Object.values(geoFences).forEach(async geoFence => {
-        const lastDistance = geodistance(geoFence.lat, geoFence.lng, last.lat, last.lng);
-        const recentDistance = geodistance(geoFence.lat, geoFence.lng, data.lat, data.lng);
-        if (lastDistance > geoFence.radius && recentDistance < geoFence.radius) { // vehicle enters geo-fence
-          // Get users
-          const usersSnap = await fB.child('USERS').orderByChild('company').equalTo(company).once('value');
-          const users = Object.values(usersSnap.val()); // { company, email, name, role }
-          // TODO send emails
-          const to = users.map(user => user.email);
-          const transport = nodemailer.createTransport(nmmgt({
-            auth: {
-              api_key: mailgun.apiKey,
-              domain: mailgun.domain,
-            },
-          }));
-          transport.sendMail({
-            from: "Smart Tracking Team <no-reply@smart.tracking.com>",
-            to,
-            subject: `Vehicle ${vh.id} just entered the geoFence ${geoFence.name}`,
-            html: `<div>Vehicle with ID ${vh.id} just entered the geoFence ${geoFence.name} at ${data.sent_tsmp}</div>
-              <div>LatLng: ${data.lat}, ${data.lng}</div>`
-          })
-        }
-        // if (lastDistance < geoFence.radius && recentDistance > geoFence.radius) // vehicle leaves geo-fence
-      });
+      if (last.length > 0) { // If there's a trail
+        last = last[0];
+        const geoFencesSnap = await fB.child(`CONTROL/GEO_FENCES/${company}`).once('value');
+        const geoFences = geoFencesSnap.val();
+        await Promise.all(Object.values(geoFences).map(async geoFence => {
+          // calculate distances
+          const lastDistance = geodistance(geoFence.lat, geoFence.lng, last.lat, last.lng);
+          const recentDistance = geodistance(geoFence.lat, geoFence.lng, data.lat, data.lng);
+          if (lastDistance > geoFence.radius && recentDistance <= geoFence.radius) { // vehicle enters geo-fence
+            // Get user
+            const userSnap = await fB.child(`CONTROL/USERS/${geoFence.uid}`).once('value');
+            const user = userSnap.val(); // { company, email, name, role }
+            const transport = nodemailer.createTransport(nmmgt({
+              auth: {
+                api_key: mailgun.apiKey,
+                domain: mailgun.domain,
+              },
+            }));
+            await transport.sendMail({
+              from: "Smart Tracking Team <no-reply@smart.tracking.com>",
+              to: user.email,
+              subject: `Vehicle ${vh.id} just entered the geoFence ${geoFence.name}`,
+              html: `<div>Vehicle with ID ${vh.id} acaba de entrar al geo-fence ${geoFence.name} a las ${data.sent_tsmp}</div>
+                <div>LatLng: ${data.lat}, ${data.lng}</div>`
+            });
+          }
+          // if (lastDistance < geoFence.radius && recentDistance > geoFence.radius) // vehicle leaves geo-fence
+        }));
+      }
+      return res.json({ message: 'Data submitted successfully' })
     } catch (e) {
       return res.status(500).send(e.message);
     }

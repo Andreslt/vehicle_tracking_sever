@@ -8,7 +8,7 @@ module.exports = (lat1, lng1, lat2, lng2) => {
   const radius = 6371e3; // Earth radius
   const phi1 = calcArc(lat1);
   const lambda1 = calcArc(lng1);
-  const phi2 = calcArc(lat1);
+  const phi2 = calcArc(lat2);
   const lambda2 = calcArc(lng2);
   const deltaPhi = phi2 - phi1;
   const deltaLambda = lambda2 - lambda1;
