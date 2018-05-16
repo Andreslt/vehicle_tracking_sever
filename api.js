@@ -47,8 +47,8 @@ router.post('/savetrail', (req, res) => {
         const geoFences = geoFencesSnap.val();
         await Promise.all(Object.values(geoFences).map(async geoFence => {
           // calculate distances
-          const lastDistance = geodistance(geoFence.lat, geoFence.lng, last.lat, last.lng);
-          const recentDistance = geodistance(geoFence.lat, geoFence.lng, data.lat, data.lng);
+          const lastDistance = geodistance(geoFence, last);
+          const recentDistance = geodistance(geoFence, data);
           if (lastDistance > geoFence.radius && recentDistance <= geoFence.radius) { // vehicle enters geo-fence
             // Get user
             const userSnap = await fB.child(`CONTROL/USERS/${geoFence.uid}`).once('value');
@@ -62,9 +62,15 @@ router.post('/savetrail', (req, res) => {
             await transport.sendMail({
               from: "Smart Tracking Team <no-reply@smart.tracking.com>",
               to: user.email,
-              subject: `Vehicle ${vh.id} just entered the geoFence ${geoFence.name}`,
+              subject: `Vehicle ${vh.id} just entered the geo-fence ${geoFence.name}`,
               html: `<div>Vehicle with ID ${vh.id} acaba de entrar al geo-fence ${geoFence.name} a las ${data.sent_tsmp}</div>
                 <div>LatLng: ${data.lat}, ${data.lng}</div>`
+            });
+            // Store event
+            const pathGF = `DATA/ENTITIES/${company}/ZONES/${vh.zone}/VEHICLES/${vh.id}/GEO_FENCES`;
+            await fB.child(pathGF).push().set({
+              geoFence: geoFence.name,
+              timestamp: data.sent_tsmp,
             });
           }
           // if (lastDistance < geoFence.radius && recentDistance > geoFence.radius) // vehicle leaves geo-fence
