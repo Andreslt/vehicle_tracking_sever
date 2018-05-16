@@ -3,3 +3,6 @@
 
 # yarn
 yarn.lock
+
+# WebStorm
+.idea
