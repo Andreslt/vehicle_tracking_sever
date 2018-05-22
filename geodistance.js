@@ -1,7 +1,9 @@
 const calcArc = angle => angle * Math.PI / 180;
 const calcSin2 = x => Math.pow(Math.sin(x), 2);
 
-module.exports = (lat1, lng1, lat2, lng2) => {
+module.exports = (location1, location2) => {
+  const { lat: lat1, lng: lng1 } = location1;
+  const { lat: lat2, lng: lng2 } = location2;
   if (!lat1 || !lng1 || !lat2 || !lng2) {
     return null;
   }
