@@ -27,6 +27,7 @@ exports.getCompanyOfVehicle = (vehicle_id, done) => {
 
 
 router.post('/savetrail', (req, res) => {
+  console.log('<<------------------------------>>');
   let data = req.body;
   exports.getCompanyOfVehicle(data.vehicle_id, async cb => {
     if (!cb) return res.status(404).send('Vehicle not found.');
