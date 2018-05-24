@@ -27,28 +27,28 @@ exports.getCompanyOfVehicle = (vehicle_id, done) => {
 
 
 router.post('/savetrail', (req, res) => {
-  console.log('<<------------------------------>>');
+  console.log('1. <<------------------------------>>');
   let data = req.body;
   exports.getCompanyOfVehicle(data.vehicle_id, async cb => {
     if (!cb) return res.status(404).send('Vehicle not found.');
     const vh = cb[Object.keys(cb)[0]];
     const company = vh.zone.split('_')[0];
     const path = `DATA/ENTITIES/${company}/ZONES/${vh.zone}/VEHICLES/${vh.id}/TRAILS`;
-    console.log('** PRE data -> ', data);
+    console.log('2. ** PRE data -> ', data);
     data = {
       ...data,
       sent_tsmp: moment(data.sent_tsmp).utcOffset("-05:00").format()
     };
-    console.log('** POST data -> ', data);
+    console.log('3. ** POST data -> ', data);
     try {
       await fB.child(path).push().set(data);
       const lastSnap = await fB.child(path).limitToLast(1).once('value').val();
-      console.log('** lastSnap-> ', lastSnap);
+      console.log('4. ** lastSnap-> ', lastSnap);
       if(!lastSnap) return res.json({ message: 'First record submitted successfully' })
       let last = Object.values(lastSnap.val());
-      console.log('** last-> ', last);
+      console.log('5. ** last-> ', last);
       if (last.length > 0) { // If there's a trail
-      console.log('** last.length > 0');
+      console.log('6. ** last.length > 0');
         last = last[0];
         const geoFencesSnap = await fB.child(`CONTROL/GEO_FENCES/${company}`).once('value');
         const geoFences = geoFencesSnap.val();
@@ -56,10 +56,10 @@ router.post('/savetrail', (req, res) => {
           // calculate distances
           const lastDistance = geodistance(geoFence, last);
           const recentDistance = geodistance(geoFence, data);
-          console.log('** lastDistance-> ', lastDistance);
-          console.log('** recentDistance-> ', recentDistance);
+          console.log('7. ** lastDistance-> ', lastDistance);
+          console.log('8. ** recentDistance-> ', recentDistance);
           if (lastDistance > geoFence.radius && recentDistance <= geoFence.radius) { // vehicle enters geo-fence
-            console.log('**  vehicle enters geo-fence **');
+            console.log('9. **  vehicle enters geo-fence **');
             // Get user
             const userSnap = await fB.child(`CONTROL/USERS/${geoFence.uid}`).once('value');
             const user = userSnap.val(); // { company, email, name, role }
@@ -83,12 +83,13 @@ router.post('/savetrail', (req, res) => {
               timestamp: data.sent_tsmp,
             });
           }
-          console.log('**  vehicle DONT enters geo-fence **');
+          console.log('10. **  vehicle DONT enters geo-fence **');
           // if (lastDistance < geoFence.radius && recentDistance > geoFence.radius) // vehicle leaves geo-fence
         }));
       }
       return res.json({ message: 'Data submitted successfully' })
     } catch (e) {
+      console.log('11. ** e.message -> ', e.message);
       return res.status(500).send(e.message);
     }
   });
