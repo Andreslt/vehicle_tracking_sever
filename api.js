@@ -41,10 +41,12 @@ router.post('/savetrail', (req, res) => {
     };
     console.log('** POST data -> ', data);
     try {
-      const lastSnap = await fB.child(path).limitToLast(1).once('value');
+      await fB.child(path).push().set(data);
+      const lastSnap = await fB.child(path).limitToLast(1).once('value').val();
+      console.log('** lastSnap-> ', lastSnap);
+      if(!lastSnap) return res.json({ message: 'First record submitted successfully' })
       let last = Object.values(lastSnap.val());
       console.log('** last-> ', last);
-      await fB.child(path).push().set(data);
       if (last.length > 0) { // If there's a trail
       console.log('** last.length > 0');
         last = last[0];
