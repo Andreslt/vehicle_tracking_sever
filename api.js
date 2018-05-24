@@ -25,23 +25,27 @@ exports.getCompanyOfVehicle = (vehicle_id, done) => {
   })
 };
 
+
 router.post('/savetrail', (req, res) => {
   let data = req.body;
   exports.getCompanyOfVehicle(data.vehicle_id, async cb => {
     if (!cb) return res.status(404).send('Vehicle not found.');
     const vh = cb[Object.keys(cb)[0]];
-    const company = vh.zone.slice(0, 5);
+    const company = vh.zone.split('_')[0];
     const path = `DATA/ENTITIES/${company}/ZONES/${vh.zone}/VEHICLES/${vh.id}/TRAILS`;
+    console.log('** PRE data -> ', data);
     data = {
       ...data,
       sent_tsmp: moment(data.sent_tsmp).utcOffset("-05:00").format()
     };
-
+    console.log('** POST data -> ', data);
     try {
       const lastSnap = await fB.child(path).limitToLast(1).once('value');
       let last = Object.values(lastSnap.val());
+      console.log('** last-> ', last);
       await fB.child(path).push().set(data);
       if (last.length > 0) { // If there's a trail
+      console.log('** last.length > 0');
         last = last[0];
         const geoFencesSnap = await fB.child(`CONTROL/GEO_FENCES/${company}`).once('value');
         const geoFences = geoFencesSnap.val();
@@ -49,7 +53,10 @@ router.post('/savetrail', (req, res) => {
           // calculate distances
           const lastDistance = geodistance(geoFence, last);
           const recentDistance = geodistance(geoFence, data);
+          console.log('** lastDistance-> ', lastDistance);
+          console.log('** recentDistance-> ', recentDistance);
           if (lastDistance > geoFence.radius && recentDistance <= geoFence.radius) { // vehicle enters geo-fence
+            console.log('**  vehicle enters geo-fence **');
             // Get user
             const userSnap = await fB.child(`CONTROL/USERS/${geoFence.uid}`).once('value');
             const user = userSnap.val(); // { company, email, name, role }
@@ -73,6 +80,7 @@ router.post('/savetrail', (req, res) => {
               timestamp: data.sent_tsmp,
             });
           }
+          console.log('**  vehicle DONT enters geo-fence **');
           // if (lastDistance < geoFence.radius && recentDistance > geoFence.radius) // vehicle leaves geo-fence
         }));
       }
