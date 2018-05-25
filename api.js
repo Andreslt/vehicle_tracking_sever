@@ -39,7 +39,8 @@ router.post('/savetrail', (req, res) => {
 
     try {
       const lastSnap = await fB.child(path).limitToLast(1).once('value');
-      let last = Object.values(lastSnap.val());
+      let last = lastSnap.val();
+      last = last ? Object.values(last) : [];
       await fB.child(path).push().set(data);
       if (last.length > 0) { // If there's a trail
         last = last[0];
