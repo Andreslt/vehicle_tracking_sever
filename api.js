@@ -55,6 +55,7 @@ router.post('/savetrail', (req, res) => {
         const geoFences = geoFencesSnap.val();
         console.log('*** geoFences -> ', geoFences);
         console.log('-------------');
+        if(geoFences){
         await Promise.all(Object.values(geoFences).map(async geoFence => {
           // calculate distances
           console.log('*** geoFence -> ', geoFence);
@@ -93,6 +94,7 @@ router.post('/savetrail', (req, res) => {
           }else console.log('>>> vehicle enters geo-fence', false, '<<<');
           // if (lastDistance < geoFence.radius && recentDistance > geoFence.radius) // vehicle leaves geo-fence
         }));
+        }
       }else console.log('>>If there is a trail ', false, '<<');
       return res.json({ message: 'Data submitted successfully' })
     } catch (e) {
