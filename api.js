@@ -39,25 +39,35 @@ router.post('/savetrail', (req, res) => {
       sent_tsmp: moment(data.sent_tsmp).utcOffset("-05:00").format()
     };
     console.log('** data 2 -> ', data);
+    console.log('-------------');
     try {
       const lastSnap = await fB.child(path).limitToLast(1).once('value');
       let last = lastSnap.val();
       last = last ? Object.values(last) : [];
       console.log('*** last -> ', last);
+      console.log('-------------');
       await fB.child(path).push().set(data);
       if (last.length > 0) { // If there's a trail
       console.log('>>If there is a trail ', true, '<<');
+      console.log('-------------');
         last = last[0];
         const geoFencesSnap = await fB.child(`CONTROL/GEO_FENCES/${company}`).once('value');
         const geoFences = geoFencesSnap.val();
+        console.log('*** geoFences -> ', geoFences);
+        console.log('-------------');
         await Promise.all(Object.values(geoFences).map(async geoFence => {
           // calculate distances
+          console.log('*** geoFence -> ', geoFence);
+          console.log('*** last -> ', last);
+          console.log('-------------');          
           const lastDistance = geodistance(geoFence, last);
           console.log('*** lastDistance -> ', lastDistance);
           const recentDistance = geodistance(geoFence, data);
           console.log('*** recentDistance -> ', recentDistance);
+          console.log('-------------');
           if (lastDistance > geoFence.radius && recentDistance <= geoFence.radius) { // vehicle enters geo-fence
             console.log('>>> vehicle enters geo-fence', true, '<<<');
+            console.log('-------------');  
             // Get user
             const userSnap = await fB.child(`CONTROL/USERS/${geoFence.uid}`).once('value');
             const user = userSnap.val(); // { company, email, name, role }
@@ -87,6 +97,7 @@ router.post('/savetrail', (req, res) => {
       return res.json({ message: 'Data submitted successfully' })
     } catch (e) {
       console.log('******** ERROR => ', e.message);
+      console.log('-------------');
       return res.status(500).send(e.message);
     }
   });
