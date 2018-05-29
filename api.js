@@ -86,6 +86,7 @@ router.post('/savetrail', (req, res) => {
       }else console.log('>>If there is a trail ', false, '<<');
       return res.json({ message: 'Data submitted successfully' })
     } catch (e) {
+      console.log('******** ERROR => ', e.message);
       return res.status(500).send(e.message);
     }
   });
