@@ -46,6 +46,7 @@ router.post('/savetrail', (req, res) => {
         last = last[0];
         const geoFencesSnap = await fB.child(`CONTROL/GEO_FENCES/${company}`).once('value');
         const geoFences = geoFencesSnap.val();
+        if (geoFences){
         await Promise.all(Object.values(geoFences).map(async geoFence => {
           // calculate distances
           const lastDistance = geodistance(geoFence, last);
@@ -76,6 +77,7 @@ router.post('/savetrail', (req, res) => {
           }
           // if (lastDistance < geoFence.radius && recentDistance > geoFence.radius) // vehicle leaves geo-fence
         }));
+        }
       }
       return res.json({ message: 'Data submitted successfully' })
     } catch (e) {
