@@ -6,3 +6,9 @@ yarn.lock
 
 # WebStorm
 .idea
+
+# Environment Variables
+.env
+
+# Logs
+/logs
